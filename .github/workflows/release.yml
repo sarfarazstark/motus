@@ -57,7 +57,23 @@ jobs:
           repository: the-source-repo
           # Read-only on the private repo; the workflow never pushes source anywhere.
           token: ${{ secrets.SOURCE_TOKEN }}
-          ref: ${{ inputs.source_ref || github.ref_name }}
+          # On a tag push `github.ref_name` is the *public* repo's tag, which does not
+          # exist in the source repo — the build comes from main unless a ref is given.
+          ref: ${{ inputs.source_ref || 'main' }}
+
+      - name: Check the tag matches the app version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        # A release named v1.2.0 must actually contain 1.2.0, or the updater will offer
+        # the same version forever. package.json is the source of truth.
+        run: |
+          pkg_version=$(node -p "require('./package.json').version")
+          tag_version="${GITHUB_REF_NAME#v}"
+          if [ "$pkg_version" != "$tag_version" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json version $pkg_version"
+            exit 1
+          fi
+          echo "Releasing $pkg_version"
 
       - uses: oven-sh/setup-bun@v2
         with:
