@@ -118,3 +118,35 @@ jobs:
             dist/latest*.yml
           if-no-files-found: warn
           retention-days: 14
+
+  checksums:
+    name: Checksums
+    # Only when every platform built; a partial set would list hashes for files that are
+    # not all on the release page, which is worse than none.
+    needs: build
+    if: needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Compute SHA256 for every installer
+        run: |
+          cd artifacts
+          find . -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.AppImage' -o -name '*.deb' \) \
+            | sort | while read -r f; do sha256sum "$f"; done > ../SHA256SUMS.txt
+          cat ../SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SHA256SUMS
+          path: SHA256SUMS.txt
+          retention-days: 14
+
+      - name: Attach it to the release
+        # Only on a tag: a manual publish on a branch has no release name to attach to.
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${GITHUB_REF_NAME}" SHA256SUMS.txt --clobber --repo "${{ github.repository }}"
