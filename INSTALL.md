@@ -31,13 +31,13 @@ Get-FileHash .\motus-setup.exe -Algorithm SHA256
 **macOS**
 
 ```bash
-shasum -a 256 Motus-1.0.1.dmg
+shasum -a 256 Motus-<version>.dmg
 ```
 
 **Linux**
 
 ```bash
-sha256sum motus-setup.exe        # or: sha256sum -c SHA256SUMS.txt
+sha256sum -c SHA256SUMS.txt      # in the folder you downloaded into
 ```
 
 Compare the output with the matching line in `SHA256SUMS.txt` on the release page. If it
@@ -89,14 +89,14 @@ apply an unsigned update. Re-download a new version from Releases and repeat ste
 **AppImage (any distribution)**
 
 ```bash
-chmod +x motus-1.0.1.AppImage
-./motus-1.0.1.AppImage
+chmod +x motus-<version>.AppImage
+./motus-<version>.AppImage
 ```
 
 **Debian / Ubuntu**
 
 ```bash
-sudo apt install ./motus_1.0.1_amd64.deb
+sudo apt install ./motus_<version>_amd64.deb
 ```
 
 Updates are checked in-app, the same as Windows.
