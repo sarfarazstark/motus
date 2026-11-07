@@ -82,6 +82,11 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Record the version
+        shell: bash
+        # This repo has no package.json, so the version travels with the artifacts.
+        run: node -p "require('./package.json').version" > version.txt
+
       - name: Build renderer and main
         run: bun run vite:build:app
 
@@ -116,6 +121,7 @@ jobs:
             dist/*.AppImage
             dist/*.deb
             dist/latest*.yml
+            version.txt
           if-no-files-found: warn
           retention-days: 14
 
@@ -135,7 +141,8 @@ jobs:
         run: |
           cd artifacts
           find . -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.AppImage' -o -name '*.deb' \) \
-            | sort | while read -r f; do sha256sum "$f"; done > ../SHA256SUMS.txt
+            -print0 | sort -z | xargs -0 sha256sum \
+            | sed -E 's#  \./[^/]+/#  #' > ../SHA256SUMS.txt
           cat ../SHA256SUMS.txt
 
       - uses: actions/upload-artifact@v4
@@ -145,8 +152,11 @@ jobs:
           retention-days: 14
 
       - name: Attach it to the release
-        # Only on a tag: a manual publish on a branch has no release name to attach to.
-        if: startsWith(github.ref, 'refs/tags/')
+        # A manual publish runs on a branch, where GITHUB_REF_NAME is `main`; the release
+        # electron-builder created is tagged v<version>, so the version decides.
+        if: startsWith(github.ref, 'refs/tags/') || inputs.publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${GITHUB_REF_NAME}" SHA256SUMS.txt --clobber --repo "${{ github.repository }}"
+        run: |
+          version=$(cat artifacts/*/version.txt | head -1)
+          gh release upload "v${version}" SHA256SUMS.txt --clobber --repo "${{ github.repository }}"
