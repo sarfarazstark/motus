@@ -1,0 +1,104 @@
+name: Release
+
+# Builds the app from the private source repository and publishes the installers here.
+#
+# The source lives in `the-source-repo`, which is private, so this workflow checks
+# it out with SOURCE_TOKEN. Publishing then uses the default GITHUB_TOKEN, because the
+# release is created in this same repository.
+#
+# Required secret: SOURCE_TOKEN — a token with "Contents: Read-only" on
+# `the-source-repo`. Nothing else, and no write access to either repository.
+#
+# Nothing is published unless a `v*` tag is pushed or a manual run asks for it.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the built installers as a release
+        type: boolean
+        default: false
+      source_ref:
+        description: Branch, tag or SHA of the source repo to build
+        type: string
+        default: main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+            artifact: windows
+          - os: macos-latest
+            platform: mac
+            artifact: macos
+          - os: ubuntu-latest
+            platform: linux
+            artifact: linux
+
+    steps:
+      - name: Check out the source
+        uses: actions/checkout@v4
+        with:
+          repository: the-source-repo
+          # Read-only on the private repo; the workflow never pushes source anywhere.
+          token: ${{ secrets.SOURCE_TOKEN }}
+          ref: ${{ inputs.source_ref || github.ref_name }}
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build renderer and main
+        run: bun run vite:build:app
+
+      - name: Compile main entry to bytecode
+        # Must run through Electron's own V8 — bytecode from Node's V8 is rejected at
+        # launch with `cachedDataRejected`.
+        run: bun run bytenode:compile
+
+      - name: Package and publish
+        shell: bash
+        env:
+          # Default token: the release lands in this repository.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISH: ${{ startsWith(github.ref, 'refs/tags/') || inputs.publish }}
+        # Linux builds AppImage and deb; `snap` needs snapcraft credentials and would fail
+        # the whole job.
+        run: |
+          if [ "$PUBLISH" = "true" ]; then MODE=always; else MODE=never; fi
+          TARGETS=""
+          if [ "${{ matrix.platform }}" = "linux" ]; then TARGETS="AppImage deb"; fi
+          bunx electron-builder --${{ matrix.platform }} $TARGETS --publish "$MODE"
+
+      - name: Keep the installers
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motus-${{ matrix.artifact }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+            dist/*.AppImage
+            dist/*.deb
+            dist/latest*.yml
+          if-no-files-found: warn
+          retention-days: 14
