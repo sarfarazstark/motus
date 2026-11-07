@@ -142,7 +142,7 @@ jobs:
           cd artifacts
           find . -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.AppImage' -o -name '*.deb' \) \
             -print0 | sort -z | xargs -0 sha256sum \
-            | sed -E 's#  \./[^/]+/#  #' > ../SHA256SUMS.txt
+            | awk '{ name = $2; sub(/.*\//, "", name); print $1 "  " name }' > ../SHA256SUMS.txt
           cat ../SHA256SUMS.txt
 
       - uses: actions/upload-artifact@v4
