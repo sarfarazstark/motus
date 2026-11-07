@@ -21,7 +21,9 @@ keeps working when the internet does not.
 
 ## Download
 
-Grab the latest installer from the [Releases](../../releases) page. Updates arrive in-app:
+Grab the latest installer from the [Releases](../../releases) page — the **[installation
+guide](INSTALL.md)** covers the warnings an unsigned app triggers and how to verify the
+download. Updates arrive in-app:
 Motus checks for a new version after launch and installs it when you ask it to.
 
 Windows 10 and 11, 64-bit.
