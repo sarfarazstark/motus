@@ -103,7 +103,13 @@ chmod +x motus-<version>.AppImage
 sudo apt install ./motus_<version>_amd64.deb
 ```
 
-Updates are checked in-app, the same as Windows.
+Updates are checked in-app. What happens on install depends on the package:
+
+- **AppImage** — updates silently, like Windows, provided the app runs from a writable
+  location.
+- **deb / rpm** — updates too, but the package manager needs administrator rights, so
+  **your system password prompt will appear** (and it can show up behind this window).
+  That prompt cannot be suppressed by the app.
 
 ## Troubleshooting
 
