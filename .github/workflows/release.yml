@@ -11,7 +11,7 @@ on:
         type: boolean
         default: false
       source_ref:
-        description: Branch, tag or SHA of the source repo to build
+        description: Branch, tag or SHA of the source repository to build
         type: string
         default: main
 
@@ -25,6 +25,11 @@ concurrency:
 jobs:
   build:
     name: Build ${{ matrix.platform }}
+    env:
+      # Set a repository secret named SOURCE_REPO (owner/repo). A secret rather than a
+      # variable: the checkout step prints the repository URL, and only secret values are
+      # masked in the log.
+      SOURCE_REPO: ${{ secrets.SOURCE_REPO }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -41,14 +46,22 @@ jobs:
             artifact: linux
 
     steps:
+      - name: Check the source repository is configured
+        shell: bash
+        run: |
+          if [ -z "$SOURCE_REPO" ]; then
+            echo "::error::secret SOURCE_REPO is not set (expected owner/repo)"
+            exit 1
+          fi
+
       - name: Check out the source
         uses: actions/checkout@v4
         with:
-          repository: the-source-repo
+          repository: ${{ env.SOURCE_REPO }}
           # Read-only on the private repo; the workflow never pushes source anywhere.
           token: ${{ secrets.SOURCE_TOKEN }}
           # On a tag push `github.ref_name` is the *public* repo's tag, which does not
-          # exist in the source repo — the build comes from main unless a ref is given.
+          # exist in the source repository — the build comes from main unless a ref is given.
           ref: ${{ inputs.source_ref || 'main' }}
 
       - name: Check the tag matches the app version
