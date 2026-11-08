@@ -1,9 +1,7 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  # Manual only: pushing a tag builds nothing, so a release is always a deliberate click.
   workflow_dispatch:
     inputs:
       publish:
@@ -60,23 +58,8 @@ jobs:
           repository: ${{ env.SOURCE_REPO }}
           # Read-only on the private repo; the workflow never pushes source anywhere.
           token: ${{ secrets.SOURCE_TOKEN }}
-          # On a tag push `github.ref_name` is the *public* repo's tag, which does not
-          # exist in the source repository — the build comes from main unless a ref is given.
+          # The ref is the source repository's own: the build comes from main unless given.
           ref: ${{ inputs.source_ref || 'main' }}
-
-      - name: Check the tag matches the app version
-        if: startsWith(github.ref, 'refs/tags/')
-        shell: bash
-        # A release named v1.2.0 must actually contain 1.2.0, or the updater will offer
-        # the same version forever. package.json is the source of truth.
-        run: |
-          pkg_version=$(node -p "require('./package.json').version")
-          tag_version="${GITHUB_REF_NAME#v}"
-          if [ "$pkg_version" != "$tag_version" ]; then
-            echo "::error::tag $GITHUB_REF_NAME does not match package.json version $pkg_version"
-            exit 1
-          fi
-          echo "Releasing $pkg_version"
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -103,7 +86,7 @@ jobs:
         env:
           # Default token: the release lands in this repository.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PUBLISH: ${{ startsWith(github.ref, 'refs/tags/') || inputs.publish }}
+          PUBLISH: ${{ inputs.publish }}
         # Linux builds AppImage and deb; `snap` needs snapcraft credentials and would fail
         # the whole job.
         run: |
@@ -155,9 +138,8 @@ jobs:
           retention-days: 14
 
       - name: Attach it to the release
-        # A manual publish runs on a branch, where GITHUB_REF_NAME is `main`; the release
-        # electron-builder created is tagged v<version>, so the version decides.
-        if: startsWith(github.ref, 'refs/tags/') || inputs.publish
+        # Publishing is only possible from a manual run, so that input is the whole test.
+        if: inputs.publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
