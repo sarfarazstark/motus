@@ -1,15 +1,5 @@
 name: Release
 
-# Builds the app from the private source repository and publishes the installers here.
-#
-# The source lives in `the-source-repo`, which is private, so this workflow checks
-# it out with SOURCE_TOKEN. Publishing then uses the default GITHUB_TOKEN, because the
-# release is created in this same repository.
-#
-# Required secret: SOURCE_TOKEN — a token with "Contents: Read-only" on
-# `the-source-repo`. Nothing else, and no write access to either repository.
-#
-# Nothing is published unless a `v*` tag is pushed or a manual run asks for it.
 on:
   push:
     tags:
