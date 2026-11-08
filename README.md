@@ -27,3 +27,10 @@ download. Updates arrive in-app:
 Motus checks for a new version after launch and installs it when you ask it to.
 
 Windows 10 and 11, 64-bit.
+
+## Licence
+
+Motus is proprietary software, licensed rather than sold. Use of the app is granted
+to the person who bought it, for their own business; copying, modification, resale
+and reverse engineering are not. The full terms are in [LICENSE](LICENSE) and are
+shown at install time.
