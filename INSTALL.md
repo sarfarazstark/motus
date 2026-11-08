@@ -4,6 +4,10 @@ Motus is a Windows desktop app for running a gym. This guide covers installing i
 past the warnings an unsigned app always triggers, and checking that the file you
 downloaded is the one published here.
 
+Installing Motus means accepting its licence: proprietary, licensed rather than
+sold, for use in your own business. The full terms are in [LICENSE](LICENSE), and the
+Windows installer shows them before it installs anything.
+
 ## Before you start
 
 Grab the installer from the [Releases](../../releases) page. Each release lists its files
