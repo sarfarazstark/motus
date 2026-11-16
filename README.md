@@ -7,6 +7,8 @@ Motus runs on the gym's own machine. No cloud account, no always-on subscription
 members, payments and attendance live in a password-protected local database, and the app
 keeps working when the internet does not.
 
+Landing page: https://motus.shalestack.com
+
 ## What it does
 
 - **Members** — plans, renewals, freezes, dues and expiry, with every member's status
@@ -18,19 +20,3 @@ keeps working when the internet does not.
   with the address restricted to your own network by default.
 - **Reports** — revenue, dues and attendance exports to Excel, Word and PDF.
 - **Backups** — encrypted local backups, restorable from inside the app.
-
-## Download
-
-Grab the latest installer from the [Releases](../../releases) page — the **[installation
-guide](INSTALL.md)** covers the warnings an unsigned app triggers and how to verify the
-download. Updates arrive in-app:
-Motus checks for a new version after launch and installs it when you ask it to.
-
-Windows 10 and 11, 64-bit.
-
-## Licence
-
-Motus is proprietary software, licensed rather than sold. Use of the app is granted
-to the person who bought it, for their own business; copying, modification, resale
-and reverse engineering are not. The full terms are in [LICENSE](LICENSE) and are
-shown at install time.
